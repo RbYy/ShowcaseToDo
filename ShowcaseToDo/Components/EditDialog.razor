@@ -1,0 +1,31 @@
+﻿@using ShowCaseToDo.Models
+@implements IDialogContentComponent<Item>
+@namespace ShowCaseToDo
+
+@* <FluentMessageBarProvider Section="@App.MESSAGES_DIALOG" MaxMessageCount="1" />
+ *@
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+    <FluentTextField @bind-Value="@Content.Title">Task Title:</FluentTextField>
+    <FluentTextArea Rows="8" Cols="80" @bind-Value="@Content.Details">Task Details:</FluentTextArea>
+</FluentStack>
+@if (false)
+{
+    <FluentStack Orientation="Orientation.Vertical" Style="border: 1px solid red; padding: 10px">
+        <span>This section is visible only when component is hosted inside a Dialog</span>
+        <FluentButton OnClick="@(() => ToggleDialogPrimaryActionButton(true))">Enable Dialog Primary Action</FluentButton>
+        <FluentButton OnClick="@(() => ToggleDialogPrimaryActionButton(false))">Disable Dialog Primary Action</FluentButton>
+    </FluentStack>
+}
+
+@code {
+    [Parameter]
+    public Item Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private void ToggleDialogPrimaryActionButton(bool enable)
+    {
+        Dialog!.TogglePrimaryActionButton(enable);
+    }
+}
