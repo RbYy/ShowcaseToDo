@@ -1,42 +1,71 @@
 ﻿@page "/"
+@using Newtonsoft.Json
 @using ShowCaseToDo.Models
 @namespace ShowCaseToDo
 @inject IDialogService DialogService
+@inject IJSRuntime JS
+
 
 <FluentStack Orientation="Orientation.Horizontal">
     <FluentGrid Justify="JustifyContent.FlexStart" Spacing="1">
         <FluentGridItem xs="12" sm="12">
-            <FluentSortableList Fallback="true" Items="items" OnUpdate="SortList">
-                <ItemTemplate >
-                    <FluentStack ref="itemElement" @onclick="()=>ShowDetails(context)"
-                                 Orientation="Orientation.Horizontal" 
-                                style="display: flex; justify-content: space-between; align-items: center; background:@(backgroundStatus)">
-                            <FluentLabel  Style="width:100%">@context.Title</FluentLabel>
-                            <FluentStack Orientation="Orientation.Horizontal" >
-                                <FluentButton Appearance="Appearance.Stealth"
-                                              @onclick="()=>UpdateStatus(context, Status.ToDo)"
-                                              Style="border-radius: 50%;padding:6px;"
-                                              IconStart="new Icons.Filled.Size16.Calendar().WithColor(Color.Warning)" />
-                                <FluentButton Appearance="Appearance.Stealth"
-                                          @onclick="()=>UpdateStatus(context, Status.InProgress)"
-                                              Style="border-radius: 50%;padding:6px;"
-                                              IconStart="new Icons.Filled.Size16.Edit().WithColor(Color.Accent)" />
-                                <FluentButton Appearance="Appearance.Stealth"
-                                          @onclick="()=>UpdateStatus(context, Status.Completed)"
-                                          Style="border-radius: 50%;padding:6px;"
-                                          IconStart="new Icons.Filled.Size16.Prohibited().WithColor(Color.Success)" />
-                                <FluentButton Appearance="Appearance.Stealth"
-                                          @onclick="()=>UpdateStatus(context, Status.Canceled)"
-                                          Style="border-radius: 50%;padding:6px;"
-                                          IconStart="new Icons.Filled.Size16.Prohibited().WithColor(Color.Disabled)" />
+            <FluentSortableList Class="height-50" ref="sortable" Fallback="true" Items="items" OnUpdate="SortList">
+                <ItemTemplate>
+	                <FluentStack ref="itemElement" @onclick="() => ShowDetails(context)"
+	                             class="@(context.CssClasses.BackGroundClass)"
+	                             Orientation="Orientation.Horizontal"
+	                             style="display: flex; justify-content: space-between; align-items: center; margin: 0">
+@* 		                <FluentBadge class="@context.CssClasses.BadgeClass">@context.Status.ToString()</FluentBadge>
+ *@
+		                <FluentLabel class="@(context.CssClasses.BackGroundClass)"
+		                             Style="width: 100%; margin: 0; padding: 0 5px">
+			                @context.Title
+		                </FluentLabel>
+		                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
+			                
+			                <div @onclick:stopPropagation="true">
+			                <FluentButton Appearance="Appearance.Stealth"
+			                              @onclick="() => UpdateStatus(context, Status.ToDo)"
+			                              Style="border-radius: 50%; padding: 6px;"
+			                              IconStart="new Icons.Filled.Size16.Calendar().WithColor(Color.Warning)"
+			                              Title="To Do"/>
+			                </div>
 
-                                <FluentButton 
-                                    Appearance="Appearance.Stealth" 
-                                    @onclick="()=>RemoveItem(context)" 
-                                    Style="border-radius: 50%;padding:6px;" 
-                                    IconStart="new Icons.Filled.Size16.Dismiss().WithColor(Color.Error)" />
-                            </FluentStack>
-                    </FluentStack>
+			                <div @onclick:stopPropagation="true">
+				                <FluentButton Appearance="Appearance.Stealth"
+				                              @onclick="() => UpdateStatus(context, Status.InProgress)"
+				                              Style="border-radius: 50%; padding: 6px;"
+				                              IconStart="new Icons.Filled.Size16.Edit().WithColor(Color.Accent)"
+				                              Title="In Progress"/>
+			                </div>
+
+			                <div @onclick:stopPropagation="true">
+			                <FluentButton Appearance="Appearance.Stealth"
+			                              @onclick="() => UpdateStatus(context, Status.Completed)"
+			                              Style="border-radius: 50%; padding: 6px;"
+			                              IconStart="new Icons.Filled.Size16.Checkmark().WithColor(Color.Success)"
+			                              Title="Completed"/>
+			                </div>
+
+			                <div @onclick:stopPropagation="true">
+				                <FluentButton Appearance="Appearance.Stealth"
+				                              @onclick="() => UpdateStatus(context, Status.Canceled)"
+				                              Style="border-radius: 50%; padding: 6px;"
+				                              IconStart="new Icons.Filled.Size16.Prohibited().WithColor(Color.Disabled)"
+				                              Title="Cancel"/>
+			                </div>
+
+			                <div @onclick:stopPropagation="true">
+			                <FluentButton
+				                Appearance="Appearance.Stealth"
+				                @onclick="() => RemoveItem(context)"
+				                Style="border-radius: 50%; padding: 6px;"
+				                IconStart="new Icons.Filled.Size16.Dismiss().WithColor(Color.Error)"
+				                Title="Remove"/>
+			                </div>
+
+		                </FluentStack>
+	                </FluentStack>
                 </ItemTemplate>
             </FluentSortableList>
         </FluentGridItem>
@@ -44,41 +73,77 @@
 
     <FluentButton   
         Appearance="Appearance.Accent"
-        @onclick="AddItem" 
+        @onclick="async()=>await AddItem()" 
         Style="border-radius: 50%;padding:6px;height:4.5em"
         IconStart="new Icons.Filled.Size48.Add().WithColor(Color.Lightweight)" />
 </FluentStack>
 
 @code {
      
-    private Microsoft.Maui.Graphics.Color backgroundStatus;
     private FluentStack itemElement;
+    private FluentSortableList<Item> sortable;
+
     public List<Item> items = Enumerable.Range(1, 10).Select(i => 
-        new Item 
-        {
-            Id = i, 
-            Title = $"Title {i}",
-            Details = @"'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\System.Runtime.Numerics.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+	    new Item 
+	    {
+		    Id = i, 
+		    Title = $"Title {i}",
+		    Details = @"'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\System.Runtime.Numerics.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
                 'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\System.Formats.Asn1.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-                'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\System.Net.Http.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-                'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Users\Robert Brumat\source\repos\ShowcaseToDo\ShowCaseToDo\bin\Debug\net8.0-windows10.0.19041.0\win10-x64\AppX\Microsoft.AspNetCore.Components.Forms.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-                'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\Microsoft.Win32.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+               CaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\Microsoft.Win32.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
                 "
-        }
+	    }
     ).ToList();
 
-    private void RemoveItem(Item item)
+    protected override async Task OnInitializedAsync()
     {
-        items.RemoveAt(item.Id);
+	    await base.OnInitializedAsync();
+        if (!File.Exists(App.DataFilePath)) return;
+        var jsonString = await File.ReadAllTextAsync(App.DataFilePath);
+	    if (jsonString == null) return;
+	    items = JsonConvert.DeserializeObject<List<Item>>(jsonString);
     }
-    private void AddItem(object o)
+
+    private async Task RemoveItem(Item item)
     {
+        items.RemoveAt(item.Id-1);
+        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+    }
+    private async Task AddItem()
+    {
+	    var item = new Item();
+        DialogParameters parameters = new()
+        {
+	        Title = $"Create New Task",
+	        Width = "500px",
+	        TrapFocus = true,
+	        Modal = true,
+	        PreventScroll = false
+        };
+
+        IDialogReference dialog = await DialogService.ShowDialogAsync<EditDialog>(item, parameters);
+        DialogResult? result = await dialog.Result;
+
+
+        if (!string.IsNullOrWhiteSpace(item.Title) || !string.IsNullOrWhiteSpace(item.Details))
+        {
+	       items.Add(item);
+        }
+        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
 
     }
-    private void UpdateStatus(Item item, Status status)
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+	    base.OnAfterRender(firstRender);
+        JS.InvokeVoidAsync("itemNoPadding");
+    }
+
+    private async Task UpdateStatus(Item item, Status status)
     {
         item.Status = status;
-        backgroundStatus = Item.StatusColors[status];
+        var a = sortable;
+        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
     }
 
     private async Task ShowDetails(Item item)
@@ -104,8 +169,12 @@
             Item? newItem = result.Data as Item;
         }
 
+        var a = JsonConvert.SerializeObject(items);
+        var b = App.DataFilePath;
+        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+
     }
-    private void SortList(FluentSortableListEventArgs args)
+    private async Task SortList(FluentSortableListEventArgs args)
     {
         if (args is null || args.OldIndex == args.NewIndex)
         {
@@ -127,6 +196,8 @@
         {
             items.Add(itemToMove);
         }
+        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+
     }
 
     //*************************************************************************/
@@ -153,6 +224,21 @@
 
         cssClasses.Remove(cssClass);
         component.Class = string.Join(' ', cssClasses);
+    }
+
+    public void UpdateCssClasses(FluentComponentBase component, ICollection<string> cssClasses, bool addCondition)
+    {
+        foreach (var cssClass in cssClasses)
+	    {
+		    if (addCondition)
+		    {
+			    AddClass(component, cssClass);
+		    }
+		    else
+		    {
+			    RemoveClass(component, cssClass);
+		    }
+	    };
     }
 
 }

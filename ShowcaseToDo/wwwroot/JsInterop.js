@@ -26,7 +26,13 @@ window.getElementDimensions = (selector) => {
     }
     return null;
 }
-
+window.itemNoPadding = () => {
+    var elements = document.getElementsByClassName("sortable-item");
+    for (var i = 0, l = elements.length; i < l; i++)
+    {
+        elements[i].classList.add("no-padding");
+    }
+}
 //new Sortable(el, {
 //	removeOnSpill: true, // Enable plugin
 //	// Called when item is spilled
@@ -35,3 +41,5 @@ window.getElementDimensions = (selector) => {
 //        console.log("asdasdasdasdsad")
 //	}
 //});
+
+

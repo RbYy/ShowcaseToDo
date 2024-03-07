@@ -1,0 +1,7 @@
+﻿.fluent-sortable-list.height-50 {
+    --fluent-sortable-list-item-height: 60px
+}
+
+.no-padding {
+    padding: 0 0 0 0;
+}
