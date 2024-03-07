@@ -12,6 +12,15 @@ namespace ShowCaseToDo.Models
         public string Title { get; set; } = "";
         public string Details { get; set; } = "";
         public bool ShowDetails { get; set; }
+        public Status Status { get; set; }
+
+        public static Dictionary<Status, Color> StatusColors = new()
+        {
+            { Status.ToDo, Colors.Orchid },
+            {Status.InProgress, Colors.Azure },
+            {Status.Completed, Colors.Green },
+            {Status.Canceled, Colors.Grey },
+        };
     }
     public enum Status
     {
@@ -21,4 +30,6 @@ namespace ShowCaseToDo.Models
         Canceled = 3,
 
     }
+
+
 }
