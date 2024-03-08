@@ -1,15 +1,21 @@
 ﻿@using ShowCaseToDo.Models
+@using ShowCaseToDo.Services
 @implements IDialogContentComponent<Item>
 @namespace ShowCaseToDo
+@inject IStorage<Item> Storage
 <FluentDialogHeader></FluentDialogHeader>
 
 <FluentDialogBody>
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
         <FluentStack class="@(Content.Styles.BackGroundClass)" Style="padding:1em 3em 1em 0" Orientation="Orientation.Horizontal" VerticalGap="10" HorizontalAlignment="HorizontalAlignment.Right">
-            <FluentIcon Value="@Content.Styles.Icon"></FluentIcon>
-            <H3>@Content.Status.ToString()</H3>
+            <StateButtonSet OnStatusSet="UpdateStatus" Item="Content"></StateButtonSet>
+            <FluentStack class="@(Content.Styles.BackGroundClass)"  Orientation="Orientation.Horizontal" VerticalGap="10" HorizontalAlignment="HorizontalAlignment.Right">
+                <FluentIcon Value="@Content.Styles.Icon"></FluentIcon>
+                <H3>@Content.Status.ToString()</H3>
+            </FluentStack>
         </FluentStack>
-            <FluentTextField @bind-Value="@Content.Title">Task Title:</FluentTextField>
+
+        <FluentTextField @bind-Value="@Content.Title">Task Title:</FluentTextField>
 
         <FluentTextArea Rows="8" Cols="80" @bind-Value="@Content.Details">Task Details:</FluentTextArea>
     </FluentStack>
@@ -29,5 +35,10 @@
         Dialog!.TogglePrimaryActionButton(enable);
     }
     
+    private async Task UpdateStatus(Tuple<Status, Item> statusitem)
+    {
+        statusitem.Item2.Status = statusitem.Item1;
+        await Storage.UpdateAsync(statusitem.Item2);
+    }
 
 }
