@@ -1,0 +1,46 @@
+﻿@using ShowCaseToDo.Models
+
+<FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
+	<div @onclick:stopPropagation="true">
+		<FluentButton Appearance="Appearance.Stealth"
+					  @onclick="(e) => StatusSet(e, Status.ToDo)"
+ 					  Style="border-radius: 50%; padding: 6px;"
+					  IconStart="new Icons.Filled.Size16.Calendar().WithColor(Color.Warning)"
+					  Title="To Do" />
+	</div>
+
+	<div @onclick:stopPropagation="true">
+		<FluentButton Appearance="Appearance.Stealth"
+					  @onclick="(e) => StatusSet(e, Status.InProgress)"
+					  Style="border-radius: 50%; padding: 6px;"
+					  IconStart="new Icons.Filled.Size16.Edit().WithColor(Color.Accent)"
+					  Title="In Progress" />
+	</div>
+
+	<div @onclick:stopPropagation="true">
+		<FluentButton Appearance="Appearance.Stealth"
+					  @onclick="(e) => StatusSet(e, Status.Completed)"
+ 					  Style="border-radius: 50%; padding: 6px;"
+					  IconStart="new Icons.Filled.Size16.Checkmark().WithColor(Color.Success)"
+					  Title="Completed" />
+	</div>
+
+	<div @onclick:stopPropagation="true">
+		<FluentButton Appearance="Appearance.Stealth"
+					  @onclick="(e) => StatusSet(e, Status.Canceled)"
+ 					  Style="border-radius: 50%; padding: 6px;"
+					  IconStart="new Icons.Filled.Size16.Prohibited().WithColor(Color.Disabled)"
+					  Title="Cancel" />
+	</div>
+</FluentStack>
+
+@code{
+	[Parameter]
+	public EventCallback<Tuple<Status, Item>> OnStatusSet { get; set; }
+	[Parameter]
+	public Item Item { get; set; }
+	private async Task StatusSet(MouseEventArgs e, Status status)
+	{
+		await OnStatusSet.InvokeAsync(new Tuple<Status, Item>(status, Item));
+	}
+}

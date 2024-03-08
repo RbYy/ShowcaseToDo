@@ -1,9 +1,11 @@
 ﻿@page "/"
 @using Newtonsoft.Json
 @using ShowCaseToDo.Models
+@using ShowCaseToDo.Services
 @namespace ShowCaseToDo
 @inject IDialogService DialogService
 @inject IJSRuntime JS
+@inject IStorage<Item> Storage
 
 
 <FluentStack Orientation="Orientation.Horizontal">
@@ -12,48 +14,17 @@
             <FluentSortableList Class="height-50" ref="sortable" Fallback="true" Items="items" OnUpdate="SortList">
                 <ItemTemplate>
 	                <FluentStack ref="itemElement" @onclick="() => ShowDetails(context)"
-	                             class="@(context.CssClasses.BackGroundClass)"
+	                             class="@(context.Styles.BackGroundClass)"
 	                             Orientation="Orientation.Horizontal"
 	                             style="display: flex; justify-content: space-between; align-items: center; margin: 0">
-@* 		                <FluentBadge class="@context.CssClasses.BadgeClass">@context.Status.ToString()</FluentBadge>
- *@
-		                <FluentLabel class="@(context.CssClasses.BackGroundClass)"
+
+		                <FluentLabel class="@(context.Styles.BackGroundClass)"
 		                             Style="width: 100%; margin: 0; padding: 0 5px">
 			                @context.Title
 		                </FluentLabel>
 		                <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
 			                
-			                <div @onclick:stopPropagation="true">
-			                <FluentButton Appearance="Appearance.Stealth"
-			                              @onclick="() => UpdateStatus(context, Status.ToDo)"
-			                              Style="border-radius: 50%; padding: 6px;"
-			                              IconStart="new Icons.Filled.Size16.Calendar().WithColor(Color.Warning)"
-			                              Title="To Do"/>
-			                </div>
-
-			                <div @onclick:stopPropagation="true">
-				                <FluentButton Appearance="Appearance.Stealth"
-				                              @onclick="() => UpdateStatus(context, Status.InProgress)"
-				                              Style="border-radius: 50%; padding: 6px;"
-				                              IconStart="new Icons.Filled.Size16.Edit().WithColor(Color.Accent)"
-				                              Title="In Progress"/>
-			                </div>
-
-			                <div @onclick:stopPropagation="true">
-			                <FluentButton Appearance="Appearance.Stealth"
-			                              @onclick="() => UpdateStatus(context, Status.Completed)"
-			                              Style="border-radius: 50%; padding: 6px;"
-			                              IconStart="new Icons.Filled.Size16.Checkmark().WithColor(Color.Success)"
-			                              Title="Completed"/>
-			                </div>
-
-			                <div @onclick:stopPropagation="true">
-				                <FluentButton Appearance="Appearance.Stealth"
-				                              @onclick="() => UpdateStatus(context, Status.Canceled)"
-				                              Style="border-radius: 50%; padding: 6px;"
-				                              IconStart="new Icons.Filled.Size16.Prohibited().WithColor(Color.Disabled)"
-				                              Title="Cancel"/>
-			                </div>
+                            <StateButtonSet OnStatusSet="UpdateStatus" Item="@context"></StateButtonSet>
 
 			                <div @onclick:stopPropagation="true">
 			                <FluentButton
@@ -70,7 +41,12 @@
             </FluentSortableList>
         </FluentGridItem>
     </FluentGrid>
-
+    <FluentOverlay @bind-Visible=@overlayVisible
+               Opacity="0.4"
+               Alignment="Align.Center"
+               Justification="JustifyContent.Center">
+        <FluentProgressRing />
+    </FluentOverlay>
     <FluentButton   
         Appearance="Appearance.Accent"
         @onclick="async()=>await AddItem()" 
@@ -79,12 +55,10 @@
 </FluentStack>
 
 @code {
-     
-    private FluentStack itemElement;
-    private FluentSortableList<Item> sortable;
+    bool overlayVisible;
 
-    public List<Item> items = Enumerable.Range(1, 10).Select(i => 
-	    new Item 
+    public IEnumerable<Item> items = Enumerable.Range(1, 10).Select(i => 
+        new Item 
 	    {
 		    Id = i, 
 		    Title = $"Title {i}",
@@ -97,21 +71,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-	    await base.OnInitializedAsync();
-        if (!File.Exists(App.DataFilePath)) return;
-        var jsonString = await File.ReadAllTextAsync(App.DataFilePath);
-	    if (jsonString == null) return;
-	    items = JsonConvert.DeserializeObject<List<Item>>(jsonString);
+        await base.OnInitializedAsync();
+        items = (List<Item>)await Storage.GetAllAsync();
     }
 
     private async Task RemoveItem(Item item)
     {
-        items.RemoveAt(item.Id-1);
+        await Storage.DeleteAsync(item);
         await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
     }
     private async Task AddItem()
     {
-	    var item = new Item();
+        var item = new Item();
         DialogParameters parameters = new()
         {
 	        Title = $"Create New Task",
@@ -127,33 +98,30 @@
 
         if (!string.IsNullOrWhiteSpace(item.Title) || !string.IsNullOrWhiteSpace(item.Details))
         {
-	       items.Add(item);
+            await Storage.CreateAsync(item);
+            overlayVisible = true;
+            await Task.Delay(1000);
+            overlayVisible = false;
         }
-        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
-
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
-	    base.OnAfterRender(firstRender);
+        base.OnAfterRender(firstRender);
         JS.InvokeVoidAsync("itemNoPadding");
     }
 
-    private async Task UpdateStatus(Item item, Status status)
+    private async Task UpdateStatus(Tuple<Status, Item> statusitem)
     {
-        item.Status = status;
-        var a = sortable;
-        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+        statusitem.Item2.Status = statusitem.Item1;
+        await Storage.UpdateAsync(statusitem.Item2);
     }
 
-    private async Task ShowDetails(Item item)
+    private async Task ShowDetails(Item item)   
     {
         DialogParameters parameters = new()
             {
-                Title = $"Hello {item.Title}",
-                PrimaryAction = "Yes",
-                PrimaryActionEnabled = false,
-                SecondaryAction = "No",
+                Title = $"Edit {item.Title}",
                 Width = "500px",
                 TrapFocus = true,
                 Modal = true,
@@ -163,82 +131,19 @@
         IDialogReference dialog = await DialogService.ShowDialogAsync<EditDialog>(item, parameters);
         DialogResult? result = await dialog.Result;
 
-
-        if (result.Data is not null)
-        {
-            Item? newItem = result.Data as Item;
-        }
-
-        var a = JsonConvert.SerializeObject(items);
-        var b = App.DataFilePath;
         await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
-
+        overlayVisible = true;
+        await Task.Delay(1000);
+        overlayVisible = false;
     }
     private async Task SortList(FluentSortableListEventArgs args)
     {
         if (args is null || args.OldIndex == args.NewIndex)
-        {
             return;
-        }
 
-        var oldIndex = args.OldIndex;
-        var newIndex = args.NewIndex;
-
-        var items = this.items;
-        var itemToMove = items[oldIndex];
-        items.RemoveAt(oldIndex);
-
-        if (newIndex < items.Count)
-        {
-            items.Insert(newIndex, itemToMove);
-        }
-        else
-        {
-            items.Add(itemToMove);
-        }
-        await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
-
+        await Storage.MoveToNewPosition(args.OldIndex, args.NewIndex);
     }
 
-    //*************************************************************************/
 
-    public void AddClass(FluentComponentBase component, string cssClass)
-    {
-        HashSet<string> cssClasses = new HashSet<string>();
-        if (component.Class != null)
-        {
-            cssClasses = [.. component.Class?.Split(' ')];
-        }
-
-        cssClasses.Add(cssClass);
-        component.Class = string.Join(' ', cssClasses);
-    }
-
-    public void RemoveClass(FluentComponentBase component, string cssClass)
-    {
-        HashSet<string> cssClasses = new HashSet<string>();
-        if (component.Class != null)
-        {
-            cssClasses = [.. component.Class?.Split(' ')];
-        }
-
-        cssClasses.Remove(cssClass);
-        component.Class = string.Join(' ', cssClasses);
-    }
-
-    public void UpdateCssClasses(FluentComponentBase component, ICollection<string> cssClasses, bool addCondition)
-    {
-        foreach (var cssClass in cssClasses)
-	    {
-		    if (addCondition)
-		    {
-			    AddClass(component, cssClass);
-		    }
-		    else
-		    {
-			    RemoveClass(component, cssClass);
-		    }
-	    };
-    }
 
 }

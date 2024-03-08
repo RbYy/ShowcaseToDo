@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.FluentUI.AspNetCore.Components;
+using ShowCaseToDo.Models;
+using ShowCaseToDo.Services;
 
 namespace ShowCaseToDo
 {
@@ -22,8 +24,9 @@ namespace ShowCaseToDo
 			builder.Services.AddBlazorWebViewDeveloperTools();
 			builder.Logging.AddDebug();
 #endif
+			builder.Services.AddScoped<IStorage<Item>, FileStorage>();
 
-			return builder.Build();
+            return builder.Build();
 		}
 	}
 }

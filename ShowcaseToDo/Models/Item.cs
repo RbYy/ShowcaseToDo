@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Newtonsoft.Json;
 
 namespace ShowCaseToDo.Models
@@ -14,36 +15,32 @@ namespace ShowCaseToDo.Models
         public string Details { get; set; } = "";
         public Status Status { get; set; }
         [JsonIgnore]
-        public Css? CssClasses => Css.CssClasses.FirstOrDefault((i) => i.Status == Status);
+        public TaskStatus? Styles => TaskStatus.CssClasses.FirstOrDefault((i) => i.Status == Status);
     }
-    public class Css
+    public class TaskStatus
     {
         public Status Status { get; set; }
         public string BackGroundClass { get; set; }
         public string BadgeClass { get; set; }
+        public Icon Icon { get; set; }
 
-        public Css(Status status, string backGroundClass, string badgeClass)
+        public TaskStatus(Status status, string backGroundClass, string badgeClass, Icon icon)
         {
             Status = status;
             BackGroundClass = backGroundClass;
             BadgeClass = badgeClass;
+            Icon = icon;
         }
 
-        public static  List<Css> CssClasses  = 
+        public static  List<TaskStatus> CssClasses  = 
         [
-            new(status: Status.ToDo, backGroundClass: "status-bg-todo", badgeClass: "status-badge-todo"),
-            new(status: Status.InProgress, backGroundClass: "status-bg-progress", badgeClass: "status-badge-progress"),
-            new (status: Status.Completed, backGroundClass: "status-bg-completed", badgeClass: "status-badge-completed"),
-            new (status: Status.Canceled, backGroundClass: "status-bg-canceled", badgeClass: "status-badge-canceled"),
+            new(Status.ToDo, "status-bg-todo", "status-badge-todo", new Icons.Regular.Size32.Calendar()),
+            new(Status.InProgress, "status-bg-progress", "status-badge-progress", new Icons.Regular.Size32.Edit()),
+            new (Status.Completed, "status-bg-completed", "status-badge-completed", new Icons.Regular.Size32.Checkmark()),
+            new (Status.Canceled, "status-bg-canceled", "status-badge-canceled", new Icons.Regular.Size32.Prohibited()),
         ];
     }
-    //public static Dictionary<Status, string> StatusColors = new()
-    //{
-    //    { Status.ToDo, "status-bg-todo"},
-    //    { Status.InProgress, "status-bg-progress" },
-    //    { Status.Completed, "status-bg-completed" },
-    //    { Status.Canceled, "status-bg-canceled" },
-    //};
+
     public enum Status
     {
         ToDo = 0,

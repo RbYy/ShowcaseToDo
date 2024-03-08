@@ -1,21 +1,21 @@
 ﻿@using ShowCaseToDo.Models
 @implements IDialogContentComponent<Item>
 @namespace ShowCaseToDo
+<FluentDialogHeader></FluentDialogHeader>
 
-@* <FluentMessageBarProvider Section="@App.MESSAGES_DIALOG" MaxMessageCount="1" />
- *@
-<FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
-    <FluentTextField @bind-Value="@Content.Title">Task Title:</FluentTextField>
-    <FluentTextArea Rows="8" Cols="80" @bind-Value="@Content.Details">Task Details:</FluentTextArea>
-</FluentStack>
-@if (false)
-{
-    <FluentStack Orientation="Orientation.Vertical" Style="border: 1px solid red; padding: 10px">
-        <span>This section is visible only when component is hosted inside a Dialog</span>
-        <FluentButton OnClick="@(() => ToggleDialogPrimaryActionButton(true))">Enable Dialog Primary Action</FluentButton>
-        <FluentButton OnClick="@(() => ToggleDialogPrimaryActionButton(false))">Disable Dialog Primary Action</FluentButton>
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+        <FluentStack class="@(Content.Styles.BackGroundClass)" Style="padding:1em 3em 1em 0" Orientation="Orientation.Horizontal" VerticalGap="10" HorizontalAlignment="HorizontalAlignment.Right">
+            <FluentIcon Value="@Content.Styles.Icon"></FluentIcon>
+            <H3>@Content.Status.ToString()</H3>
+        </FluentStack>
+            <FluentTextField @bind-Value="@Content.Title">Task Title:</FluentTextField>
+
+        <FluentTextArea Rows="8" Cols="80" @bind-Value="@Content.Details">Task Details:</FluentTextArea>
     </FluentStack>
-}
+</FluentDialogBody>
+
+<FluentDialogFooter Visible="false"></FluentDialogFooter>
 
 @code {
     [Parameter]
