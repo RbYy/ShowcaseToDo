@@ -10,14 +10,14 @@ namespace ShowCaseToDo.Models
 {
     public class Item
     {
-        public int Id { get; set; }
+        public string Id { get; protected set; }
         public string Title { get; set; } = "";
         public string Details { get; set; } = "";
         public Status Status { get; set; }
-        [JsonIgnore]
-        public TaskStatus? Styles => TaskStatus.CssClasses.FirstOrDefault((i) => i.Status == Status);
+        public Item()
+        {
+            Id= Guid.NewGuid().ToString();
+        }
     }
-
-
 
 }

@@ -27,8 +27,8 @@ namespace ShowCaseToDo.Models
 
         public static  List<TaskStatus> CssClasses  = 
         [
-            new(Status.ToDo, "status-bg-todo", "status-badge-todo", new Icons.Regular.Size32.Calendar()),
-            new(Status.InProgress, "status-bg-progress", "status-badge-progress", new Icons.Regular.Size32.Edit()),
+            new (Status.ToDo, "status-bg-todo", "status-badge-todo", new Icons.Regular.Size32.Calendar()),
+            new (Status.InProgress, "status-bg-progress", "status-badge-progress", new Icons.Regular.Size32.Edit()),
             new (Status.Completed, "status-bg-completed", "status-badge-completed", new Icons.Regular.Size32.Checkmark()),
             new (Status.Canceled, "status-bg-canceled", "status-badge-canceled", new Icons.Regular.Size32.Prohibited()),
         ];

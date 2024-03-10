@@ -11,8 +11,8 @@ namespace ShowCaseToDo.Services
         Task<T> CreateAsync(T entity);
         Task<T> UpdateAsync(T entity);
         Task DeleteAsync(T entity);
-        T Get(int id);
-        Task<IEnumerable<T>> GetAllAsync();
+        T Get(string id);
+        Task<List<T>> GetAllAsync();
     }
     internal interface ISortable
     {

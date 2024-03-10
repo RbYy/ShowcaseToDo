@@ -14,11 +14,11 @@
             <FluentSortableList Class="height-50" ref="sortable" Fallback="true" Items="items" OnUpdate="SortList">
                 <ItemTemplate>
 	                <FluentStack ref="itemElement" @onclick="() => ShowDetails(context)"
-	                             class="@(context.Styles.BackGroundClass)"
+	                             class="@(ShowCaseToDo.Models.TaskStatus.CssClasses.FirstOrDefault(i => i.Status == context.Status).BackGroundClass)"
 	                             Orientation="Orientation.Horizontal"
 	                             style="display: flex; justify-content: space-between; align-items: center; margin: 0">
 
-		                <FluentLabel class="@(context.Styles.BackGroundClass)"
+		                <FluentLabel 
 		                             Style="width: 100%; margin: 0; padding: 0 5px">
 			                @context.Title
 		                </FluentLabel>

@@ -9,16 +9,19 @@ namespace ShowCaseToDo.Services
         bool initialized;
         public async Task DeleteAsync(Item item)
         {
-            items.Remove(item);
+            Item? itemToRemove =null;
+            if ((itemToRemove = items?.FirstOrDefault(i => i.Id == item.Id)) == null)
+                return;
+            _ = items?.Remove(itemToRemove);
             await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
         }
 
-        public Item Get(int id)
+        public Item? Get(string id)
         {
             return items.FirstOrDefault(i => i.Id == id);
         }
 
-        public async Task<IEnumerable<Item>> GetAllAsync()
+        public async Task<List<Item>> GetAllAsync()
         {
             if (initialized) return items;
             if (!File.Exists(App.DataFilePath)) 
