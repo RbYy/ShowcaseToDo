@@ -16,10 +16,12 @@ namespace ShowCaseToDo.WinUI
 		/// </summary>
 		public App()
 		{
-			this.InitializeComponent();
+            this.InitializeComponent();
 		}
 
 		protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+
+
 	}
 
 }

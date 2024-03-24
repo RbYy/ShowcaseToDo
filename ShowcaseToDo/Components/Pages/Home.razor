@@ -5,11 +5,11 @@
 @namespace ShowCaseToDo
 @inject IDialogService DialogService
 @inject IJSRuntime JS
-@inject IStorage<Item> Storage
+@inject IDataAccessService<Item> DataAccessService
 
 
 <FluentStack Orientation="Orientation.Horizontal">
-    <FluentGrid Justify="JustifyContent.FlexStart" Spacing="1">
+    <FluentGrid Justify="JustifyContent.FlexStart" Spacing="1" Class="w-100">
         <FluentGridItem xs="12" sm="12">
             <FluentSortableList Class="height-50" ref="sortable" Fallback="true" Items="items" OnUpdate="SortList">
                 <ItemTemplate>

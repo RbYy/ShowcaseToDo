@@ -2,6 +2,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using ShowCaseToDo.Models;
+using ShowCaseToDo.Services;
 
 namespace ShowCaseToDo
 {
@@ -9,26 +10,17 @@ namespace ShowCaseToDo
     {
         bool overlayVisible;
 
-        public IEnumerable<Item> items = Enumerable.Range(1, 10).Select(i =>
-            new Item
-            {
-                Title = $"Title {i}",
-                Details = @"'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\System.Runtime.Numerics.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-                'ShowCaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\System.Formats.Asn1.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-               CaseToDo.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.2\Microsoft.Win32.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-                "
-            }
-        ).ToList();
+        public IEnumerable<Item> items = []; 
 
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
-            items = await Storage.GetAllAsync();
+            items = await DataAccessService.GetAllAsync();
         }
 
         private async Task RemoveItem(Item item)
         {
-            await Storage.DeleteAsync(item);
+            await DataAccessService.DeleteAsync(item);
         }
 
         private async Task AddItem()
@@ -48,7 +40,7 @@ namespace ShowCaseToDo
 
             if (!string.IsNullOrWhiteSpace(item.Title) || !string.IsNullOrWhiteSpace(item.Details))
             {
-                await Storage.CreateAsync(item);
+                await DataAccessService.CreateAsync(item);
             }
         }
 
@@ -61,7 +53,7 @@ namespace ShowCaseToDo
         private async Task UpdateStatus(Tuple<Status, Item> statusitem)
         {
             statusitem.Item2.Status = statusitem.Item1;
-            await Storage.UpdateAsync(statusitem.Item2);
+            await DataAccessService.UpdateAsync(statusitem.Item2);
         }
 
         private async Task ShowDetails(Item item)
@@ -76,9 +68,7 @@ namespace ShowCaseToDo
             };
 
             IDialogReference dialog = await DialogService.ShowDialogAsync<EditDialog>(item, parameters);
-            DialogResult? result = await dialog.Result;
-
-            await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+            await DataAccessService.UpdateAsync(item);
             overlayVisible = true;
             await Task.Delay(1000);
             overlayVisible = false;
@@ -88,7 +78,7 @@ namespace ShowCaseToDo
             if (args is null || args.OldIndex == args.NewIndex)
                 return;
 
-            await Storage.MoveToNewPosition(args.OldIndex, args.NewIndex);
+            await DataAccessService.MoveToNewPosition(args.OldIndex, args.NewIndex);
         }
 
 

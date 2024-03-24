@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ShowCaseToDo.Services
 {
-    internal interface IStorage<T>: ISortable
+    internal interface IDataAccessService<T>: ISortable
     {
         Task<T> CreateAsync(T entity);
         Task<T> UpdateAsync(T entity);

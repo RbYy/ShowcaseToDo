@@ -3,55 +3,69 @@ using ShowCaseToDo.Models;
 
 namespace ShowCaseToDo.Services
 {
-    internal class FileStorage : IStorage<Item>, ISortable
+    internal class FileStorage<T> : IDataAccessService<T>, ISortable where T : IIdentifiable<string>
     {
-        List<Item> items;
-        bool initialized;
-        public async Task DeleteAsync(Item item)
+        string DataFilePath
         {
-            Item? itemToRemove =null;
-            if ((itemToRemove = items?.FirstOrDefault(i => i.Id == item.Id)) == null)
-                return;
-            _ = items?.Remove(itemToRemove);
-            await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+            get
+            {
+                var appSubdirectory = Path.Combine(FileSystem.AppDataDirectory, AppInfo.Current.Name);
+                var filePath = Path.Combine(appSubdirectory, "data.json");
+                if (!Directory.Exists(appSubdirectory))
+                {
+                    Directory.CreateDirectory(appSubdirectory);
+                }
+                return filePath;
+            }
         }
 
-        public Item? Get(string id)
+        List<T> items;
+        bool initialized;
+        public async Task DeleteAsync(T item) 
+        {
+            T itemToRemove = items.FirstOrDefault(i => i.Id == item.Id);
+            if (itemToRemove == null)
+                return;
+            _ = items?.Remove(itemToRemove);
+            await File.WriteAllTextAsync(DataFilePath, JsonConvert.SerializeObject(items));
+        }
+
+        public T? Get(string id)
         {
             return items.FirstOrDefault(i => i.Id == id);
         }
 
-        public async Task<List<Item>> GetAllAsync()
-        {
+        public async Task<List<T>> GetAllAsync()
+        {       
             if (initialized) return items;
-            if (!File.Exists(App.DataFilePath)) 
-                return new List<Item>();
-            var jsonString = await File.ReadAllTextAsync(App.DataFilePath);
+            if (!File.Exists(DataFilePath)) 
+                return items = new List<T>();
+            var jsonString = await File.ReadAllTextAsync(DataFilePath);
             if (jsonString == null) 
-                return new List<Item>(); 
-            items = JsonConvert.DeserializeObject<List<Item>>(jsonString);
+                return new List<T>(); 
+            items = JsonConvert.DeserializeObject<List<T>>(jsonString);
             initialized = true;
             return items;
         }
 
-        public async Task<Item> CreateAsync(Item item)
+        public async Task<T> CreateAsync(T item)
         {
             items.Add(item);
-            await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+            await File.WriteAllTextAsync(DataFilePath, JsonConvert.SerializeObject(items));
             return item;
         }
 
-        public async Task<Item> UpdateAsync(Item newItem)
+        public async Task<T> UpdateAsync(T newItem)
         {
             var item = items.FirstOrDefault(i => i.Id == newItem.Id);
             item = newItem;
-            await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+            await File.WriteAllTextAsync(DataFilePath, JsonConvert.SerializeObject(items));
             return item;
         }
 
         public async Task MoveToNewPosition(int oldIndex, int newIndex)
         {
-            items = (List<Item>)await GetAllAsync();
+            items = await GetAllAsync();
             var itemToMove = items[oldIndex];
             items.RemoveAt(oldIndex);
 
@@ -63,7 +77,7 @@ namespace ShowCaseToDo.Services
             {
                 items.Add(itemToMove);
             }
-            await File.WriteAllTextAsync(App.DataFilePath, JsonConvert.SerializeObject(items));
+            await File.WriteAllTextAsync(DataFilePath, JsonConvert.SerializeObject(items));
         }
     }
 }

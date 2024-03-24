@@ -2,7 +2,7 @@
 @using ShowCaseToDo.Services
 @implements IDialogContentComponent<Item>
 @namespace ShowCaseToDo
-@inject IStorage<Item> Storage
+@inject IDataAccessService<Item> DataAccessService
 <FluentDialogHeader></FluentDialogHeader>
 
 <FluentDialogBody>
@@ -41,7 +41,7 @@
     private async Task UpdateStatus(Tuple<Status, Item> statusitem)
     {
         statusitem.Item2.Status = statusitem.Item1;
-        await Storage.UpdateAsync(statusitem.Item2);
+        await DataAccessService.UpdateAsync(statusitem.Item2);
     }
 
 }
